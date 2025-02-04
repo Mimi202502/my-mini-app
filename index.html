@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Expense Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background: #f4f4f4;
+        }
+        h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        input, button {
+            width: 90%;
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #eee;
+            margin: 5px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            border-radius: 5px;
+        }
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>💰 Expense Tracker</h2>
+        <input type="text" id="expenseName" placeholder="Enter Expense Description">
+        <input type="number" id="expenseAmount" placeholder="Enter Amount">
+        <button onclick="addExpense()">Add Expense</button>
+
+        <ul id="expenseList"></ul>
+
+        <p class="total">Total: $<span id="totalAmount">0</span></p>
+    </div>
+
+    <script>
+        let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+
+        function addExpense() {
+            let name = document.getElementById("expenseName").value.trim();
+            let amount = document.getElementById("expenseAmount").value.trim();
+
+            if (name === "" || amount === "" || isNaN(amount) || amount <= 0) {
+                alert("Please enter valid expense details!");
+                return;
+            }
+
+            let expense = { name, amount: parseFloat(amount) };
+            expenses.push(expense);
+
+            localStorage.setItem("expenses", JSON.stringify(expenses));
+            document.getElementById("expenseName").value = "";
+            document.getElementById("expenseAmount").value = "";
+
+            renderExpenses();
+        }
+
+        function renderExpenses() {
+            let expenseList = document.getElementById("expenseList");
+            let totalAmount = document.getElementById("totalAmount");
+
+            expenseList.innerHTML = "";
+            let total = 0;
+
+            expenses.forEach((expense, index) => {
+                total += expense.amount;
+                let li = document.createElement("li");
+                li.innerHTML = `${expense.name} - $${expense.amount} 
+                    <button onclick="deleteExpense(${index})" style="background: red; padding: 5px; border: none; cursor: pointer; color: white;">X</button>`;
+                expenseList.appendChild(li);
+            });
+
+            totalAmount.textContent = total.toFixed(2);
+        }
+
+        function deleteExpense(index) {
+            expenses.splice(index, 1);
+            localStorage.setItem("expenses", JSON.stringify(expenses));
+            renderExpenses();
+        }
+
+        // Load saved expenses on startup
+        renderExpenses();
+    </script>
+
+</body>
+</html>
