@@ -9,17 +9,18 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 20px;
-            background: #f4f4f4;
+            background: #333;
+            color: white;
         }
         h2 {
-            color: #333;
+            color: #fff;
         }
         .container {
             max-width: 400px;
             margin: auto;
-            background: white;
+            background: #444;
             padding: 20px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
             border-radius: 8px;
         }
         input, button {
@@ -42,18 +43,31 @@
             padding: 0;
         }
         li {
-            background: #eee;
+            background: #555;
             margin: 5px;
             padding: 10px;
             display: flex;
             justify-content: space-between;
             border-radius: 5px;
+            flex-direction: column;
+            align-items: flex-start;
         }
         .total {
             font-size: 18px;
             font-weight: bold;
-            color: #333;
+            color: #fff;
             margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            background: #444;
+            color: white;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #666;
         }
     </style>
 </head>
@@ -67,22 +81,46 @@
 
         <ul id="expenseList"></ul>
 
-        <p class="total">Total: $<span id="totalAmount">0</span></p>
+        <p class="total">Total Today: RM <span id="totalAmount">0</span></p>
+        <p class="total">This Week Total: RM <span id="weekTotal">0</span></p>
+        <p class="total">This Month Total: RM <span id="monthTotal">0</span></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Amount (RM)</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="expenseTable"></tbody>
+        </table>
     </div>
 
     <script>
         let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
 
+        function getCurrentTime() {
+            let now = new Date();
+            let hours = now.getHours() % 12 || 12;
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            let ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+            let date = now.toISOString().split('T')[0];
+            return { time: `${hours}:${minutes} ${ampm}`, date };
+        }
+
         function addExpense() {
             let name = document.getElementById("expenseName").value.trim();
             let amount = document.getElementById("expenseAmount").value.trim();
+            let { time, date } = getCurrentTime();
 
             if (name === "" || amount === "" || isNaN(amount) || amount <= 0) {
                 alert("Please enter valid expense details!");
                 return;
             }
 
-            let expense = { name, amount: parseFloat(amount) };
+            let expense = { name, amount: parseFloat(amount), time, date };
             expenses.push(expense);
 
             localStorage.setItem("expenses", JSON.stringify(expenses));
@@ -95,30 +133,42 @@
         function renderExpenses() {
             let expenseList = document.getElementById("expenseList");
             let totalAmount = document.getElementById("totalAmount");
-
+            let weekTotal = document.getElementById("weekTotal");
+            let monthTotal = document.getElementById("monthTotal");
+            let expenseTable = document.getElementById("expenseTable");
+            
+            let today = new Date().toISOString().split('T')[0];
+            let weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+            let monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+            
             expenseList.innerHTML = "";
-            let total = 0;
+            expenseTable.innerHTML = "";
+            let totalToday = 0, totalWeek = 0, totalMonth = 0;
 
-            expenses.forEach((expense, index) => {
-                total += expense.amount;
+            expenses.forEach(expense => {
+                if (expense.date >= monthAgo) totalMonth += expense.amount;
+                if (expense.date >= weekAgo) totalWeek += expense.amount;
+                if (expense.date === today) totalToday += expense.amount;
+                
                 let li = document.createElement("li");
-                li.innerHTML = `${expense.name} - $${expense.amount} 
-                    <button onclick="deleteExpense(${index})" style="background: red; padding: 5px; border: none; cursor: pointer; color: white;">X</button>`;
+                li.innerHTML = `<strong>${expense.name} - RM ${expense.amount.toFixed(2)}</strong><br><small>${expense.time} - ${expense.date}</small>`;
                 expenseList.appendChild(li);
+                
+                let row = `<tr>
+                    <td>${expense.name}</td>
+                    <td>RM ${expense.amount.toFixed(2)}</td>
+                    <td>${expense.date}</td>
+                    <td>${expense.time}</td>
+                </tr>`;
+                expenseTable.innerHTML += row;
             });
 
-            totalAmount.textContent = total.toFixed(2);
+            totalAmount.textContent = totalToday.toFixed(2);
+            weekTotal.textContent = totalWeek.toFixed(2);
+            monthTotal.textContent = totalMonth.toFixed(2);
         }
 
-        function deleteExpense(index) {
-            expenses.splice(index, 1);
-            localStorage.setItem("expenses", JSON.stringify(expenses));
-            renderExpenses();
-        }
-
-        // Load saved expenses on startup
         renderExpenses();
     </script>
-
 </body>
 </html>
