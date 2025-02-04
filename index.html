@@ -38,6 +38,12 @@
         button:hover {
             background: #218838;
         }
+        button.delete {
+            background: #dc3545;
+        }
+        button.delete:hover {
+            background: #c82333;
+        }
         ul {
             list-style: none;
             padding: 0;
@@ -64,10 +70,13 @@
             background: #444;
             color: white;
             border-collapse: collapse;
+            overflow-x: auto; /* Enable horizontal scrolling for small screens */
+            display: block; /* Make the table a block element for scrolling */
         }
         th, td {
             padding: 10px;
             border: 1px solid #666;
+            white-space: nowrap; /* Prevent text wrapping in table cells */
         }
     </style>
 </head>
@@ -78,6 +87,7 @@
         <input type="text" id="expenseName" placeholder="Enter Expense Description">
         <input type="number" id="expenseAmount" placeholder="Enter Amount">
         <button onclick="addExpense()">Add Expense</button>
+        <button class="delete" onclick="clearExpenses()">Clear All Expenses</button>
 
         <ul id="expenseList"></ul>
 
@@ -128,6 +138,14 @@
             document.getElementById("expenseAmount").value = "";
 
             renderExpenses();
+        }
+
+        function clearExpenses() {
+            if (confirm("Are you sure you want to clear all expenses?")) {
+                expenses = [];
+                localStorage.removeItem("expenses");
+                renderExpenses();
+            }
         }
 
         function renderExpenses() {
